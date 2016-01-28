@@ -1,0 +1,60 @@
+---
+title: "CodeBook"
+author: "Olga"
+date: "January 28, 2016"
+output: html_document
+---
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+We start by downloading the data and unzipping it into our working directory.
+
+Then we have to connect the library:
+```
+library(dplyr)
+```
+
+Since data was given to us in separate files, we read each one of them using `read.table()` command and them bind them by columns using `cbind()`.
+
+`y_test`, `X_test`, `subject_test` is the data from files *test/y_test.txt*, *test/X_test.txt*, and *test/subject_test.txt* respectively. `y_test` represents a list of activities, so we name its only column **"activity"**. We also name the column of `subject_test` as **"subject"**. `X_test` has 561 variables, and they will be named **"V1"** through **"V561"**. `test` is the result of binding `subject_test`, `y_test`, and `X_test` column-wise in that order.
+
+`y_train`, `X_train`, `subject_train` is the data from files *train/y_train.txt*, *train/X_train.txt*, and *train/subject_train.txt* respectively. Again, we name the column in `y_train` as **"activity"**, and in `subject_train` - as **"subject"**. `X_train` has 561 variables, and they will be named **"V1"** through **"V561"**. `train` is the result of binding `subject_train`, `y_train`, and `X_train` column-wise in that order.
+
+Afterwards we remove the variables we no longer need:
+```
+rm(y_test, X_test, subject_test, subject_train, y_train, X_train)
+```
+
+Finally, `my_dataset` is obtained by binding `test` and `train` row-wise. Now we need to select those columns that represent the mean and standard deviation for each measurement. We know which columns to select by looking at the file *features.txt*:
+```
+my_dataset <- select(my_dataset, subject, activity, V1:V6, V41:V46, V81:V86, V121:V126, V161:V166, V201:V202, V214:V215, V227:V228, V240:V241, V253:V254, V266:V271, V345:V350, V424:V429, V503:V504, V516:V517, V529:V530, V542:V543)
+```
+We reassign obtained subset to `my_dataset`. Now we want to rename the activities in the corresponding column. The names are obtained from the file *activity_labels.txt*. First, we read them into the table `activity_labels`. Then using the function `sapply`, we reassign each activity in `my_dataset` its actual name by subsetting the table `activity_labels` with the number of the activity:
+```
+my_dataset$activity <- sapply(my_dataset$activity, function(x){x <- activity_labels[x, 2]})
+```
+Column names like **V41** or **V345** are not very informative. We need to rename them too. Their actual names are stored in the file *features.txt*. We read them into a table `features` first. But now we have all 561 names, whereas we only need those that correspond to either a mean or a standard deviation. We will need to subset the table `features` using the numbers in the columns of `my_dataset`. We read all column names of `my_dataset` except for **subject** and *activity**:
+```
+my_dataset_colnames <- colnames(my_dataset)[3:68]
+```
+And delete the letter *V* from them:
+```
+my_dataset_colnames <- as.numeric(gsub("V", "", my_dataset_colnames))
+```
+Now we can extract the names we need from `features`:
+```
+feature_names <- as.character(features[my_dataset_colnames,]$V2)
+```
+We also append the names "subject" and "activity" to the beginning of `feature_names`.
+They still need a liitle bit of tidying up. We replace "_" with ".", delete the parentheses, replace "t" with "time" and "f" with "freq". Now assign our dataset new column names:
+```
+colnames(my_dataset) <- feature_names
+```
+The last step requires us to group `my_dataset` by **subject** and **activity**. We create a new variable for that:
+```
+my_dataset_grouped <- group_by(my_dataset, subject, activity)
+```
+Lastly, we summarise `my_dataset_grouped` with the average of each variable for each activity and each subject, creating a new tidy dataset.
+```
+independent_dataset <- summarise_each(my_dataset_grouped, funs(mean), contains("std"), contains("mean"))
+```

@@ -1,0 +1,16 @@
+---
+title: "README"
+author: "Olga"
+date: "January 28, 2016"
+output: html_document
+---
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+To run the analysis on data, source the file ***run_analysis.R***. It downloads the data from the website, unzips it and merges the training and the test sets to create one data set.
+
+Then the measurements on the mean and standard deviation for each measurement are extracted to perform analysis on them.
+
+In the process of tidying up this dataset, the code uses descriptive activity names to name the activities. Then it also ppropriately labels the data set with descriptive variable names.
+
+Finally, a second, independent tidy data set is created, with the average of each variable for each activity and each subject.
